@@ -1,0 +1,371 @@
+project
+
+
+
+```{r}
+library(sf)
+library(shiny)
+library(ggplot2)
+library(leaflet)
+library(shinydashboard)
+library(DT)
+library(maps)
+library(readr)
+
+```
+Data load
+```{r}
+greenland_people = read_csv("demograghic data/UNdata_Export_20231216_233521232.csv")
+fareo_people = read_csv("demograghic data/UNdata_Export_20231216_233659425.csv")
+iceland_people =read_csv("demograghic data/population.csv")
+iceland_marriage =  read_csv("demograghic data/marriage.csv")
+iceland_death <- read_csv("demograghic data/death.csv")
+table(fareo_people$Variant)
+```
+
+
+```{r}
+
+# Verbal Comparison Content
+verbal_comparison_content <- function() {
+  comparison_text <- "
+  Iceland, the Faroe Islands, and Greenland are unique in their own ways, each offering distinct geographical, economic, and social characteristics:
+
+  Geography:
+  - Iceland, known for its volcanic landscape and geothermal activity, is the largest and most populous of the three, located southeast of Greenland.
+  - The Faroe Islands, an archipelago between the Norwegian Sea and the North Atlantic Ocean, are characterized by rugged, rocky coasts and a maritime climate.
+  - Greenland, the world's largest island, is predominantly covered by ice, with a sparse population mostly along the coast.
+
+  Economy:
+  - Iceland's economy is diverse, with strong sectors in fisheries, renewable energy, and tourism.
+  - The economy of the Faroe Islands is primarily based on fishing and aquaculture, along with tourism and some petroleum activity.
+  - Greenland's economy is heavily dependent on fishing and subsidies from Denmark, though there is potential for mining and oil exploration.
+
+  Demographics:
+  - Iceland has a population of about 340,000, with most people living in the capital, Reykjavik.
+  - The Faroe Islands have a smaller population of around 54,000, with a majority living in the capital, Tórshavn.
+  - Greenland has the smallest population, about 56,000, with Nuuk as its largest city and capital.
+
+  Social Factors:
+  - Iceland ranks high in terms of quality of life, education, and healthcare. It's known for its progressive social policies.
+  - The Faroe Islands also enjoy high standards of living, with a strong sense of community and cultural heritage.
+  - Greenland faces more social challenges, including higher rates of poverty and lower life expectancy compared to Iceland and the Faroe Islands.
+
+  While these islands share some similarities, such as their Nordic ties and challenges related to their remote and harsh climates, each has developed its unique way of life and societal structure."
+  return(comparison_text)
+}
+
+ggplot(popu , aes(x = Year.s., y = Value)) +
+      geom_point() + 
+      theme_minimal() +
+      labs(title = "Population Projections for Iceland from 1950 to 2100", x = "Scenario", y = "Population (in thousands)") +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+
+
+# show population predicton
+ ggplot(iceland_data, aes(x = Year, y = Population, color = Type, shape = Type)) +
+      geom_point() +
+      theme_minimal() +
+      labs(title = "Population Projections for Iceland", x = "Year", y = "Population (in thousands)") +
+      scale_shape_manual(values = c(16, 17))
+
+ 
+ggplot(faro_people , aes(x =faro_people$`Year(s)`, y = Value)) +
+      geom_point() +
+      theme_minimal() +
+      labs(title = "Population Projections for faroe island", x = "Year", y = "Population(in thousands)")
+  })
+
+ggplot(greenland_people , aes(x =greenland_people$`Year(s)`, y = Value)) +
+      geom_point() +
+      theme_minimal() +
+      labs(title = "Population Projections for Greenland", x = "Year", y = "Population(in thousands)")
+  })
+
+greenland_people$`Country or Area`
+```
+
+
+
+```{r}
+library(shiny)
+library(leaflet)
+library(sf)
+
+# Define the cities data
+cities <- data.frame(
+  name = c("Reykjavik", "Akureyri", "Keflavik", "Hafnarfjörður", "Kópavogur", "Egilsstaðir"),
+  lat = c(64.1466, 65.6835, 64.0028, 64.0671, 64.1101, 65.2642),
+  lng = c(-21.9426, -18.1059, -22.6216, -21.9403, -21.9055, -14.3948)
+)
+
+
+server <- function(input, output) {
+
+  # Iceland Population Projection Plot
+  output$combinedPlot <- renderPlot({
+    selected_variant <- input$variantSelect
+    
+    filtered_iceland_people <- iceland_people[iceland_people$Variant == selected_variant, ]
+    filtered_fareo_people<- fareo_people[fareo_people$Variant == selected_variant, ]
+    filtered_greenland_people <- greenland_people[greenland_people $Variant == selected_variant, ]
+
+    # Combine the filtered data for plotting
+    combined_data <- rbind(filtered_iceland_people, filtered_fareo_people, filtered_greenland_people)
+  
+    ggplot(combined_data, aes(x = combined_data$`Year(s)`, y = Value, color = combined_data$`Country or Area`)) +
+      geom_point() +
+      theme_minimal() +
+      labs(title = paste("Population Projections for", selected_variant), x = "Year", y = "Population")
+  })
+
+
+  # Verbal Comparison
+  output$Comparison <- renderPrint({
+    cat("Here you can provide a detailed comparison of Iceland, the Faroe Islands, and Greenland in terms of population, economy, geography, and other relevant factors.")
+  }) # Corrected by adding a closing brace here
+
+  # Detailed map of Iceland
+  output$icelandMap <- renderLeaflet({
+    iceland_data <- st_read("iceland_regions (1).geojson")
+
+    leaflet() %>%
+      addTiles() %>%
+      addPolygons(data = iceland_data, fillColor = "blue", weight = 1, smoothFactor = 0.5) %>%
+      setView(lng = -19.0208, lat = 64.9631, zoom = 5.25) %>%
+      addMarkers(data = cities, ~lng, ~lat, popup = ~name)
+  })
+  
+  # comparion of these island 
+  output$verbalComparison <- renderPrint({
+    cat(verbal_comparison_content())
+  })
+  # World map showing Iceland's location
+  output$worldMap <- renderLeaflet({
+    leaflet() %>%
+      addProviderTiles(providers$Esri.WorldStreetMap) %>%
+      setView(lng = -19.0208, lat = 64.9631, zoom = 1) %>%
+      addMarkers(lng = -19.0208, lat = 64.9631, popup = "Iceland")
+  })
+}
+
+# Run the application
+shinyApp(ui = ui, server = server)
+
+```
+
+```{r}
+library(shiny)
+library(leaflet)
+
+# UI Definition
+ui <- navbarPage("Iceland Analysis Dashboard",
+                 
+  # Introduction tab
+  tabPanel("Introduction",
+    fluidPage(
+      # Content for Introduction
+      h1("Welcome to the Iceland Analysis Dashboard"),
+      p("This dashboard provides an introduction and key demographics of Iceland, 
+         a comparison with other island states, and a SWOT analysis.")
+      # You can add more introduction elements here
+    )
+  ),
+  
+  # Key Demographics tab with subpanels for maps
+  tabPanel("Key Demographics",
+    fluidPage(
+      h2("Key Demographics of Iceland"),
+      tabsetPanel(
+        # Subpanel for the first map
+        tabPanel("Detailed Map of Iceland",
+          leafletOutput("icelandMap")
+          # Server logic will go here to render the map
+        ),
+        # Subpanel for the second map
+        tabPanel("Iceland on World Map",
+          leafletOutput("worldMap")
+          # Server logic will go here to render the map
+        )
+      )
+    )
+  ),
+  
+  # Comparison tab
+  tabPanel("Comparison",
+    fluidPage(
+      # Content for Comparison
+      h2("Comparison with Other Island States"),
+      p("Comparative analysis will be displayed here.")
+      # You can include maps, graphs, and statistical comparisons
+    )
+  ),
+  
+  # SWOT Analysis tab with a 4-part grid layout
+  tabPanel("SWOT Analysis",
+    fluidPage(
+      h2("SWOT Analysis of Iceland"),
+      fluidRow(
+        column(6,
+          h3("Strengths"),
+          tags$ul(
+            tags$li("Iceland has abundant renewable energy resources, particularly geothermal and hydroelectric power, making it one of the world's leaders in renewable energy."),
+            tags$li("The country's unique landscape, including glaciers, hot springs, and volcanoes, attracts tourists worldwide, boosting its economy."),
+            tags$li("Iceland is known for its stable political environment and high level of social trust."),
+            tags$li("High living standards, excellent healthcare, and education systems.")
+          )
+        ),
+        column(6,
+          h3("Weaknesses"),
+          tags$ul(
+            tags$li("Heavy reliance on tourism and fishing, which makes its economy vulnerable to global fluctuations in these sectors."),
+            tags$li("Being an island nation, Iceland faces challenges related to transportation and access to certain goods and markets."),
+            tags$li("The small population limits the scale of the domestic market and workforce."),
+            tags$li("Due to its remote location, the cost of living and doing business in Iceland can be high.")
+          )
+        )
+      ),
+      fluidRow(
+        column(6,
+          h3("Opportunities"),
+          tags$ul(
+            tags$li("Opportunities to expand in green energy, eco-tourism, and sustainable fisheries."),
+            tags$li("Potential for growth in tech sectors, especially those leveraging Iceland's unique data center advantages (cool climate and renewable energy)."),
+            tags$li("Forming strategic alliances can enhance trade, cultural exchange, and political cooperation."),
+            tags$li("Leveraging its high education standards for research and development, particularly in environmental sciences and renewable energy.")
+          )
+        ),
+        column(6,
+          h3("Threats"),
+          tags$ul(
+            tags$li("As a country with significant ice masses, Iceland faces direct threats from climate change, including melting glaciers and changing ecosystems."),
+            tags$li("Global economic downturns can significantly impact its key sectors like tourism and fishing."),
+            tags$li("Increased tourism and industrial activity could strain Iceland's pristine environment."),
+            tags$li("Competition in the tourism sector and renewable energy market from other countries.")
+          )
+        )
+      )
+    )
+  )
+  
+  # You can add more tabs if needed
+)
+
+```
+
+
+
+
+```{r}
+ui <- navbarPage("Iceland Analysis Dashboard",
+                 
+  # Introduction tab
+  tabPanel("Introduction",
+    fluidPage(
+      h1("Welcome to the Iceland Analysis Dashboard"),
+      p("This dashboard provides an introduction and key demographics of Iceland, 
+         a comparison with other island states, and a SWOT analysis.")
+    )
+  ),
+  
+  # Key Demographics tab with subpanels for maps
+  tabPanel("Key Demographics",
+    fluidPage(
+      h2("Key Demographics of Iceland"),
+      tabsetPanel(
+        tabPanel("Detailed Map of Iceland", leafletOutput("icelandMap")),
+        tabPanel("Iceland on World Map", leafletOutput("worldMap"))
+      )
+    )
+  ),
+  
+  # Comparison tab with subpanels
+  tabPanel("Comparison",
+    fluidPage(
+      h2("Comparison with Other Island States"),
+      tabsetPanel(
+        tabPanel("Introduction",
+          fluidPage(
+            h1("Welcome to the Iceland Analysis Dashboard"),
+            p("This dashboard provides insights into the demographics and key characteristics of Iceland, 
+               along with a comparison with other island states like the Faroe Islands and Greenland.")
+            p("We are mainly focus on island near the iceland, faroe island and greenland, in the second ")
+           )
+        ),
+        tabPanel("Population Projections",
+          fluidPage(
+            h2("Population Projections: Faroe Islands and Greenland"),
+            selectInput("variantSelect", "Select Variant:", 
+                        choices = c("Constant fertility", "Constant mortality", "zero migration", "High", "Low", "Medium")),
+            plotOutput("combinedPlot"),
+            h3("Explanation of Variants"),
+            p("Medium: Represents a median projection, assuming average trends in fertility, mortality, and migration continue."),
+            p("High/Low: These projections show the potential population size under higher or lower than expected trends in fertility, mortality, and migration."),
+            p("Constant Fertility: Assumes that fertility rates remain constant at current levels."),
+            p("Constant Mortality: Assumes that mortality rates do not change over time."),
+            p("Zero Migration: Assumes no migration in or out of the population.")
+          )
+        ),
+        tabPanel("Verbal Comparison",
+          fluidPage(
+            h2("Comparative Analysis"),
+            verbatimTextOutput("verbalComparison")
+          )
+        )
+      )
+    )
+  ),
+
+  # SWOT Analysis tab
+  tabPanel("SWOT Analysis",
+    fluidPage(
+      h2("SWOT Analysis of Iceland"),
+      fluidRow(
+        column(6,
+          h3("Strengths"),
+          tags$ul(
+            tags$li("Iceland has abundant renewable energy resources, particularly geothermal and hydroelectric power, making it one of the world's leaders in renewable energy."),
+            tags$li("The country's unique landscape, including glaciers, hot springs, and volcanoes, attracts tourists worldwide, boosting its economy."),
+            tags$li("Iceland is known for its stable political environment and high level of social trust."),
+            tags$li("High living standards, excellent healthcare, and education systems.")
+          )
+        ),
+        column(6,
+          h3("Weaknesses"),
+          tags$ul(
+            tags$li("Heavy reliance on tourism and fishing, which makes its economy vulnerable to global fluctuations in these sectors."),
+            tags$li("Being an island nation, Iceland faces challenges related to transportation and access to certain goods and markets."),
+            tags$li("The small population limits the scale of the domestic market and workforce."),
+            tags$li("Due to its remote location, the cost of living and doing business in Iceland can be high.")
+          )
+        )
+      ),
+      fluidRow(
+        column(6,
+          h3("Opportunities"),
+          tags$ul(
+            tags$li("Opportunities to expand in green energy, eco-tourism, and sustainable fisheries."),
+            tags$li("Potential for growth in tech sectors, especially those leveraging Iceland's unique data center advantages (cool climate and renewable energy)."),
+            tags$li("Forming strategic alliances can enhance trade, cultural exchange, and political cooperation."),
+            tags$li("Leveraging its high education standards for research and development, particularly in environmental sciences and renewable energy.")
+          )
+        ),
+        column(6,
+          h3("Threats"),
+          tags$ul(
+            tags$li("As a country with significant ice masses, Iceland faces direct threats from climate change, including melting glaciers and changing ecosystems."),
+            tags$li("Global economic downturns can significantly impact its key sectors like tourism and fishing."),
+            tags$li("Increased tourism and industrial activity could strain Iceland's pristine environment."),
+            tags$li("Competition in the tourism sector and renewable energy market from other countries.")
+          )
+        )
+      )
+    )
+  )
+)
+
+
+```
+
+
+
