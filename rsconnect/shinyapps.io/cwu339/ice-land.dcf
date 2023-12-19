@@ -1,0 +1,12 @@
+name: ice-land
+title: ice-land
+username: cwu339
+account: cwu339
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 10823016
+bundleId: 8063422
+url: https://cwu339.shinyapps.io/ice-land/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
