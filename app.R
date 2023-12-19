@@ -68,10 +68,6 @@ verbal_comparison_content <- function() {
 }
 
 
-library(shiny)
-library(leaflet)
-library(sf)
-
 # Define the cities data
 cities <- data.frame(
   name = c("Reykjavik", "Akureyri", "Keflavik", "Hafnarfjörður", "Kópavogur", "Egilsstaðir"),
@@ -156,17 +152,26 @@ server <- function(input, output) {
 
 
 
-ui <- navbarPage("Iceland Analysis Dashboard",
+ui <- fluidPage(
+  # Include custom CSS to increase font size
+  tags$head(
+    tags$style(HTML("
+            body { 
+                font-size: 18px; /* Adjust the size as needed */
+            }
+        "))
+  ),
+  navbarPage("Iceland Analysis Dashboard",
                  # Introduction tab
                  tabPanel("Introduction",
                           fluidPage(
-                            h1("Welcome to the Island State Analysis Dashboard"),
-                            p("This dashboard is a comprehensive R-based presentation focused on a specific island state. It serves as a final assignment demonstrating a wide range of data visualization and analysis capabilities."),
-                            p("The assignment encompasses creating a live, published Shiny web presentation that includes a general description with maps of the island state, key facts, a brief narrative, detailed demographics, a comparative analysis with other island states in the same region, and a SWOT (Strengths, Weaknesses, Opportunities, Threats) analysis."),
-                            p("Emphasizing quality over quantity, the presentation integrates various elements such as maps, graphs, images, tables, and narrative text. The project will be assessed based on the effective use of R for data presentation, and all sources of data and information, as well as any received assistance, should be properly cited."),
-                            p("Submissions include links to the published Shiny app and the Public Github Repository hosting the project's code.")
+                            h1("Welcome to the Iceland Analysis Dashboard"),
+                            p("This dashboard was created by Chenghan Wu."),
+                            p("This dashboard presents a comprehensive and interactive examination of a specific island state, crafted using R and Shiny. This project represents the culmination of an extensive study in data visualization and analytical techniques."),
+                            p("It features an engaging live presentation that includes detailed maps, vital statistics, narrative descriptions, and thorough demographic insights. Additionally, the dashboard offers a comparative analysis with neighboring island states and a detailed SWOT analysis, highlighting the strengths, weaknesses, opportunities, and threats of the focal island."),
+                            p("Prioritizing clarity and conciseness, this presentation skillfully blends various data representation forms like interactive maps, dynamic charts, insightful images, informative tables, and compelling narratives.")
                           ),
-                          img(src = paste0("data:image/jpg;base64,", img_data1), style = "width:80%; height:auto;")
+                          img(src = paste0("data:image/jpg;base64,", img_data1), style = "width:60%; height:auto;")
                  ),
                  # Key Demographics tab with subpanels for maps
                  tabPanel("Iceland Maps",
@@ -235,7 +240,7 @@ ui <- navbarPage("Iceland Analysis Dashboard",
                                          p("We mainly focus on islands near Iceland, Faroe Islands, and Greenland. In the second page, we will show the demographic population projection for these three islands to enable a comparison."),
                                          p("In the final page, we will compare these three islands in various aspects to see the differences between them and gain insights for a SWOT analysis for Iceland.")
                                        ),
-                                       img(src = paste0("data:image/jpg;base64,", img_data), style = "width:80%; height:auto;")
+                                       img(src = paste0("data:image/jpg;base64,", img_data), style = "width:60%; height:auto;")
                               ),
                               tabPanel("Population Projections",
                                        fluidPage(
@@ -308,68 +313,12 @@ ui <- navbarPage("Iceland Analysis Dashboard",
                  navbarMenu(
                    title = "Bibliography",
                    align = "right",
-                   tabPanel(tags$a(href = "https://en.wikipedia.org/wiki/Kiribati", "Wikipedia/Kiribati")),
+                   tabPanel(tags$a(href = "https://data.un.org/Search.aspx?q=iceland", "data source")),
                    tabPanel(tags$a(href = "https://www.shinyapps.io/", "shinyapps.io for publishing")),
-                   # ... other links ...
+                   tabPanel(tags$a(href = "https://en.wikipedia.org/wiki/Iceland", "Wikipedia/iceland")),
+                   tabPanel(tags$a(href = "https://chat.openai.com/", "Chatgpt"))
                  )
-)
+))
 
 # Run the application
 shinyApp(ui = ui, server = server)
-
-
-ui <- navbarPage("Iceland Analysis Dashboard",
-                 
-                 # Introduction tab
-                 tabPanel("Introduction",
-                          fluidPage(
-                            h1("Welcome to the Island State Analysis Dashboard"),
-                            p("This dashboard is a comprehensive R-based presentation focused on a specific island state. It serves as a final assignment demonstrating a wide range of data visualization and analysis capabilities."),
-                            p("The assignment encompasses creating a live, published Shiny web presentation that includes a general description with maps of the island state, key facts, a brief narrative, detailed demographics, a comparative analysis with other island states in the same region, and a SWOT (Strengths, Weaknesses, Opportunities, Threats) analysis."),
-                            p("Emphasizing quality over quantity, the presentation integrates various elements such as maps, graphs, images, tables, and narrative text. The project will be assessed based on the effective use of R for data presentation, and all sources of data and information, as well as any received assistance, should be properly cited."),
-                            p("Submissions include links to the published Shiny app and the Public Github Repository hosting the project's code.")
-                          )
-                 ),
-                 
-  tabPanel("Iceland Maps",
-    fluidPage(
-      h2("Iceland Location"),
-      p("This section includes two maps: a detailed map of Iceland showing key regions and a world map highlighting Iceland's location globally."),
-      leafletOutput("icelandMapDetailed", height = "400px"),
-      p("Description: This detailed map showcases Iceland’s topography and administrative regions. It provides a closer look at the geographic distribution and key landmarks of the country."),
-      leafletOutput("icelandWorldMap", height = "400px"),
-      p("Description: This world map indicates the location of Iceland, illustrating its relative position and distance from other countries and continents.")
-    )
-  ),
-                 # Key Demographics tab with subpanels for maps
-                 tabPanel("Key Demographics",
-                          fluidPage(
-                            h2("Key Demographics of Iceland"),
-                            # ... demographics content ...
-                          )
-                 ),
-                 
-                 # Comparison tab with subpanels
-                 tabPanel("Comparison",
-                          fluidPage(
-                            h2("Comparison with Other Island States"),
-                            tabsetPanel(
-                              tabPanel("Introduction",
-                                       fluidPage(
-                                         p("This dashboard provides insights into the demographics and key characteristics of Iceland, along with a comparison with other island states like the Faroe Islands and Greenland."),
-                                         p("We mainly focus on islands near Iceland, Faroe Islands, and Greenland. In the second page, we will show the demographic population projection for these three islands to enable a comparison."),
-                                         p("In the final page, we will compare these three islands in various aspects to see the differences between them and gain insights for a SWOT analysis for Iceland.")
-                                       )
-                              ),
-                              # ... other subpanels ...
-                            )
-                          )
-                 ),
-                 
-                 # SWOT Analysis tab
-                 # ... SWOT analysis content ...
-                 
-                 # Bibliography navbarMenu
-                 # ... bibliography links ...
-)
-
